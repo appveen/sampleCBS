@@ -1,0 +1,26 @@
+{
+  "name": "sampleCBS",
+  "version": "1.0.0",
+  "description": "Sample Core-banking system for testing Smart Contract capabilities",
+  "main": "app.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/appveen/sampleCBS.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/appveen/sampleCBS/issues"
+  },
+  "homepage": "https://github.com/appveen/sampleCBS#readme",
+  "dependencies": {
+    "dotenv": "^10.0.0",
+    "express": "^4.17.1",
+    "log4js": "^6.3.0",
+    "mongo": "^0.1.0"
+  }
+}
