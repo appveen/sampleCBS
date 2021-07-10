@@ -14,43 +14,46 @@ const db = require('./db.client');
 
 app.use(express.json());
 
-let BALANCE_ENABLE_SLOWNESS = process.env.BALANCE_ENABLE_SLOWNESS || true
-let BALANCE_SLOWNESS = process.env.BALANCE_SLOWNESS || 100
-let BALANCE_ENABLE_ERROR_ACCOUNTNUMBER = process.env.BALANCE_ENABLE_ERROR_ACCOUNTNUMBER || false
-let BALANCE_ENABLE_ERROR_STATUS = process.env.BALANCE_ENABLE_ERROR_STATUS || false
-let BALANCE_ENABLE_ERROR_COUNTRY = process.env.BALANCE_ENABLE_ERROR_COUNTRY || false
-let BALANCE_ENABLE_ERROR_CURRENCY = process.env.BALANCE_ENABLE_ERROR_CURRENCY || false
+let cbsConfig = {
+	SLOWNESS: process.env.SLOWNESS || 100,
+	STATUS: "Active",
+	BALANCE: 100,
+	INCR: 0
+}
 
-process.env.BALANCE_ACCOUNTNUMBER="Error! Invalid account number";
-process.env.BALANCE_STATUS="Error! Inactive account number";
-process.env.BALANCE_COUNTRY="Error! Country mismatch";
-process.env.BALANCE_CURRENCY="Error! Currency mismatch";
 
-// ?enable=true&value=500
-app.get("/api/config/balance/slow", (_req, _res) => {
-	logger.info(`Set Slowness :: ${JSON.stringify(_req.query)}`);
-	BALANCE_ENABLE_SLOWNESS = _req.query.enable && _req.query.enable === 'true';
-	BALANCE_SLOWNESS = _req.query.value ? parseInt(_req.query.value) : BALANCE_SLOWNESS;
-	logger.info(`BALANCE_ENABLE_SLOWNESS: ${BALANCE_ENABLE_SLOWNESS}`);
-	logger.info(`BALANCE_SLOWNESS: ${BALANCE_SLOWNESS}`);
-	_res.end();
-});
+function generateHTMLResponse(){
+	let keys = Object.keys(cbsConfig)
+	let head = `<html><style type="text/css">body {font-family: monospace;}.container {display: auto;width: 20rem;margin: 2rem 4rem;padding: 1rem;}.center {text-align: center;}p{font-size: x-large;}.key {font-weight:bold;}.value {font-weight: lighter;}</style><body><div class="container"><h1 class="center">Sample CBS</h1>`
+	let foot = `</div></body></html>`
+	let body = ""
+	keys.forEach(key => {
+		body += `<p> <span class="key">${key}</span> : <span class="value">${cbsConfig[key]}</span></p>`
+	})
+	return `${head}${body}${foot}`
+}
 
-app.get("/api/config/balance/accountnumber", (_req, _res) => {
-
-});
-
-app.get("/api/config/balance", (_req, _res) => {
-
+// ?slow=500&status=[active/inactive]&balance=100&incr=1
+app.get("/api/config", (_req, _res) => {
+	logger.info(`Config set :: ${JSON.stringify(_req.query)}`);
+	cbsConfig.SLOWNESS = _req.query.slow ? parseInt(_req.query.slow) : cbsConfig.SLOWNESS;
+	cbsConfig.STATUS = _req.query.status || cbsConfig.STATUS;
+	cbsConfig.BALANCE = _req.query.balance ? parseInt(_req.query.balance) : cbsConfig.BALANCE;
+	cbsConfig.INCR = _req.query.incr ? parseInt(_req.query.incr) : cbsConfig.INCR;
+	logger.info(`SLOWNESS: ${cbsConfig.SLOWNESS}`);
+	logger.info(`STATUS :: ${cbsConfig.STATUS}`)
+	logger.info(`BALANCE :: ${cbsConfig.BALANCE}`)
+	logger.info(`INCR :: ${cbsConfig.INCR}`)
+	_res.end(generateHTMLResponse());
 });
 
 app.get("/api/balance", (_req, _res) => {
-	logger.info(`BALANCE_ENABLE_SLOWNESS ::  ${BALANCE_ENABLE_SLOWNESS}`)
-	logger.info(_req.query)
+	logger.info(`Balance check :: ${JSON.stringify(_req.query)}`)
 	let responsePayload = _req.query
-	let status = 200
-	if(BALANCE_ENABLE_SLOWNESS) setTimeout(() => _res.status(status).json(responsePayload), BALANCE_SLOWNESS)
-	else _res.json(responsePayload)
+	responsePayload["balance"] = cbsConfig.BALANCE;
+	cbsConfig.BALANCE += cbsConfig.INCR
+	responsePayload["status"] = cbsConfig.STATUS;
+	setTimeout(() => _res.json(responsePayload), cbsConfig.SLOWNESS)
 });
 
 
